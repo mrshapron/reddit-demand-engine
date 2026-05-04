@@ -1,4 +1,4 @@
-import { Users, Sparkles, MessageCircle } from 'lucide-react';
+import { Users, Sparkles, MessageCircle, ExternalLink } from 'lucide-react';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ScoreBadge, ScoreBar } from '@/components/ui/ScoreBadge';
@@ -6,6 +6,7 @@ import { RiskIndicator } from '@/components/ui/RiskIndicator';
 import { Tag } from '@/components/ui/Tag';
 import type { SubredditInsight } from '@/types/reddit';
 import { actionLabel, formatNumber, tolerationLabel } from '@/utils/scoring';
+import { REDDIT_LINK_PROPS, subredditUrl } from '@/lib/reddit';
 
 const TONE_TO_BADGE: Record<'good' | 'caution' | 'warn' | 'neutral', 'good' | 'caution' | 'warn' | 'neutral'> = {
   good: 'good',
@@ -15,15 +16,34 @@ const TONE_TO_BADGE: Record<'good' | 'caution' | 'warn' | 'neutral', 'good' | 'c
 };
 
 export function SubredditCard({ sr }: { sr: SubredditInsight }) {
-  const action = actionLabel(sr.recommendedAction);
+  const action = actionLabel(sr.recommendedAction ?? 'lurk_first');
+  const commonQuestions = sr.commonQuestions ?? [];
+  const repeatedPains = sr.repeatedPains ?? [];
+  const customerLanguage = sr.customerLanguage ?? [];
+  const competitorMentions = sr.competitorMentions ?? [];
+  const contentAngles = sr.contentAngles ?? [];
+  const rules = sr.rules ?? [];
   return (
     <Card>
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <CardTitle className="truncate">{sr.name}</CardTitle>
+              <a
+                href={subredditUrl(sr.name)}
+                {...REDDIT_LINK_PROPS}
+                className="truncate hover:underline"
+              >
+                <CardTitle className="truncate hover:text-brand-700">{sr.name}</CardTitle>
+              </a>
               <Badge tone="brand">{tolerationLabel(sr.promotionTolerance)}</Badge>
+              <a
+                href={subredditUrl(sr.name)}
+                {...REDDIT_LINK_PROPS}
+                className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50 hover:text-brand-700"
+              >
+                <ExternalLink className="h-3 w-3" /> Open
+              </a>
             </div>
             <p className="mt-1 text-sm text-slate-600">{sr.description}</p>
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
@@ -31,7 +51,7 @@ export function SubredditCard({ sr }: { sr: SubredditInsight }) {
                 <Users className="h-3.5 w-3.5" /> {formatNumber(sr.members)} members
               </span>
               <span className="inline-flex items-center gap-1">
-                <Sparkles className="h-3.5 w-3.5 text-brand-500" /> {sr.commonQuestions.length} live
+                <Sparkles className="h-3.5 w-3.5 text-brand-500" /> {commonQuestions.length} live
                 questions
               </span>
               <span>karma req: {sr.karmaRequirement}</span>
@@ -60,8 +80,8 @@ export function SubredditCard({ sr }: { sr: SubredditInsight }) {
         <div className="grid gap-4 md:grid-cols-2">
           <Section title="Common questions" icon={<MessageCircle className="h-3.5 w-3.5" />}>
             <ul className="space-y-1.5 text-sm text-slate-700">
-              {sr.commonQuestions.map((q) => (
-                <li key={q} className="flex gap-2">
+              {commonQuestions.map((q, i) => (
+                <li key={`${q}-${i}`} className="flex gap-2">
                   <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-slate-400" />
                   <span>{q}</span>
                 </li>
@@ -70,8 +90,8 @@ export function SubredditCard({ sr }: { sr: SubredditInsight }) {
           </Section>
           <Section title="Repeated pains">
             <ul className="space-y-1.5 text-sm text-slate-700">
-              {sr.repeatedPains.map((q) => (
-                <li key={q} className="flex gap-2">
+              {repeatedPains.map((q, i) => (
+                <li key={`${q}-${i}`} className="flex gap-2">
                   <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-rose-400" />
                   <span>{q}</span>
                 </li>
@@ -83,15 +103,15 @@ export function SubredditCard({ sr }: { sr: SubredditInsight }) {
         <div className="grid gap-4 md:grid-cols-2">
           <Section title="Customer language">
             <div className="flex flex-wrap gap-1.5">
-              {sr.customerLanguage.map((c) => (
-                <Tag key={c}>{c}</Tag>
+              {customerLanguage.map((c, i) => (
+                <Tag key={`${c}-${i}`}>{c}</Tag>
               ))}
             </div>
           </Section>
           <Section title="Competitor mentions">
             <div className="flex flex-wrap gap-1.5">
-              {sr.competitorMentions.map((c) => (
-                <Tag key={c} className="border-rose-100 bg-rose-50 text-rose-700">
+              {competitorMentions.map((c, i) => (
+                <Tag key={`${c}-${i}`} className="border-rose-100 bg-rose-50 text-rose-700">
                   {c}
                 </Tag>
               ))}
@@ -101,8 +121,8 @@ export function SubredditCard({ sr }: { sr: SubredditInsight }) {
 
         <Section title="Suggested content angles">
           <ul className="space-y-1.5 text-sm text-slate-700">
-            {sr.contentAngles.map((c) => (
-              <li key={c} className="flex gap-2">
+            {contentAngles.map((c, i) => (
+              <li key={`${c}-${i}`} className="flex gap-2">
                 <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-brand-500" />
                 <span>{c}</span>
               </li>
@@ -112,8 +132,8 @@ export function SubredditCard({ sr }: { sr: SubredditInsight }) {
 
         <Section title="Subreddit rules to respect">
           <ul className="space-y-1 text-sm text-slate-600">
-            {sr.rules.map((r) => (
-              <li key={r}>· {r}</li>
+            {rules.map((r, i) => (
+              <li key={`${r}-${i}`}>· {r}</li>
             ))}
           </ul>
         </Section>

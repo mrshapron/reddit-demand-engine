@@ -1,5 +1,5 @@
 import { useState, useEffect, FormEvent } from 'react';
-import { Save, RotateCcw, CheckCircle2 } from 'lucide-react';
+import { Save, RotateCcw, CheckCircle2, Loader2, AlertTriangle } from 'lucide-react';
 import { Card, CardBody, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/Card';
 import { Field, Input, Textarea } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -8,20 +8,26 @@ import { useCompanyProfile } from '@/store/companyStore';
 import type { CompanyProfile } from '@/types/company';
 
 export function CompanyForm() {
-  const { profile, saveProfile, resetProfile } = useCompanyProfile();
+  const { profile, saveProfile, resetProfile, saving } = useCompanyProfile();
   const [draft, setDraft] = useState<CompanyProfile>(profile);
   const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => setDraft(profile), [profile]);
 
   const set = <K extends keyof CompanyProfile>(k: K) => (v: string) =>
     setDraft((d) => ({ ...d, [k]: v }));
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    saveProfile(draft);
-    setSavedAt(Date.now());
-    setTimeout(() => setSavedAt(null), 2000);
+    setError(null);
+    try {
+      await saveProfile(draft);
+      setSavedAt(Date.now());
+      setTimeout(() => setSavedAt(null), 2500);
+    } catch (err) {
+      setError((err as Error).message);
+    }
   };
 
   return (
@@ -115,14 +121,26 @@ export function CompanyForm() {
                 <CheckCircle2 className="h-3 w-3" /> Saved
               </Badge>
             )}
-            <span className="text-xs">Stored locally. Swap to a real backend in <code className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px]">src/store/companyStore.tsx</code>.</span>
+            {error && (
+              <Badge tone="warn">
+                <AlertTriangle className="h-3 w-3" /> {error}
+              </Badge>
+            )}
+            <span className="text-xs">
+              Stored on the server. Used as context for every reply, post, and recommendation.
+            </span>
           </div>
           <div className="flex gap-2">
-            <Button type="button" variant="ghost" onClick={resetProfile}>
-              <RotateCcw className="h-3.5 w-3.5" /> Reset to example
+            <Button type="button" variant="ghost" onClick={resetProfile} disabled={saving}>
+              <RotateCcw className="h-3.5 w-3.5" /> Clear
             </Button>
-            <Button type="submit" variant="primary">
-              <Save className="h-3.5 w-3.5" /> Save profile
+            <Button type="submit" variant="primary" disabled={saving}>
+              {saving ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Save className="h-3.5 w-3.5" />
+              )}
+              {saving ? 'Saving…' : 'Save profile'}
             </Button>
           </div>
         </CardFooter>

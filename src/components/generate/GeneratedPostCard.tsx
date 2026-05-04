@@ -2,11 +2,11 @@ import { useState } from 'react';
 import {
   Pencil,
   Copy,
-  CalendarClock,
   RefreshCcw,
   CheckCircle2,
   Sparkles,
   Wand2,
+  ExternalLink,
 } from 'lucide-react';
 import { Card, CardBody, CardHeader, CardFooter, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Input';
 import type { GeneratedPostDraft } from '@/types/reddit';
 import { postTypeLabel, tolerationLabel } from '@/utils/scoring';
+import { REDDIT_LINK_PROPS, subredditUrl } from '@/lib/reddit';
 
 export function GeneratedPostCard({ draft }: { draft: GeneratedPostDraft }) {
   const [title, setTitle] = useState(draft.title);
@@ -35,13 +36,31 @@ export function GeneratedPostCard({ draft }: { draft: GeneratedPostDraft }) {
     }
   };
 
+  const onOpenSubmit = async () => {
+    try {
+      await navigator.clipboard.writeText(body);
+    } catch {
+      /* noop */
+    }
+    const sub = draft.subreddit.replace(/^r\//, '').replace(/^\/+|\/+$/g, '');
+    const url = `https://www.reddit.com/r/${sub}/submit?title=${encodeURIComponent(title)}&type=TEXT`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-semibold text-brand-700">{draft.subreddit}</span>
+              <a
+                href={subredditUrl(draft.subreddit)}
+                {...REDDIT_LINK_PROPS}
+                className="inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:underline"
+              >
+                {draft.subreddit}
+                <ExternalLink className="h-3 w-3 text-brand-500" />
+              </a>
               <Badge tone="brand">{postTypeLabel(draft.postType)}</Badge>
               <Badge tone="neutral">{tolerationLabel(draft.promotionTolerance)}</Badge>
               {approved && <Badge tone="good">Approved</Badge>}
@@ -86,7 +105,7 @@ export function GeneratedPostCard({ draft }: { draft: GeneratedPostDraft }) {
           )}
         </div>
 
-        <WarningBanner warnings={draft.warnings} />
+        <WarningBanner warnings={draft.warnings ?? []} />
 
         <div className="grid gap-3 md:grid-cols-2">
           <Box title="Why this is important">{draft.whyImportant}</Box>
@@ -103,8 +122,8 @@ export function GeneratedPostCard({ draft }: { draft: GeneratedPostDraft }) {
             Reddit-native rewrite suggestions
           </div>
           <ul className="space-y-1 text-sm text-slate-700">
-            {draft.redditNativeRewriteSuggestions.map((s) => (
-              <li key={s} className="flex gap-2">
+            {(draft.redditNativeRewriteSuggestions ?? []).map((s, i) => (
+              <li key={`${s}-${i}`} className="flex gap-2">
                 <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-brand-500" />
                 <span>{s}</span>
               </li>
@@ -127,8 +146,8 @@ export function GeneratedPostCard({ draft }: { draft: GeneratedPostDraft }) {
           <Button variant="ghost" size="sm" onClick={onCopy}>
             <Copy className="h-3.5 w-3.5" /> {copied ? 'Copied' : 'Copy'}
           </Button>
-          <Button variant="secondary" size="sm">
-            <CalendarClock className="h-3.5 w-3.5" /> Schedule
+          <Button variant="secondary" size="sm" onClick={onOpenSubmit}>
+            <ExternalLink className="h-3.5 w-3.5" /> Open submit form
           </Button>
           <Button variant={approved ? 'subtle' : 'primary'} size="sm" onClick={() => setApproved((a) => !a)}>
             <CheckCircle2 className="h-3.5 w-3.5" />

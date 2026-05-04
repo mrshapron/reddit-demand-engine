@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import {
   ArrowBigUp,
+  ExternalLink,
   Pencil,
-  Send,
   X,
   Bookmark,
   MoreVertical,
@@ -21,6 +21,7 @@ import type {
   ProductMention,
 } from '@/types/reddit';
 import { timeAgo, formatNumber } from '@/utils/scoring';
+import { copyToClipboard, REDDIT_LINK_PROPS, subredditUrl } from '@/lib/reddit';
 
 type Status = 'pending' | 'applied' | 'skipped' | 'saved';
 
@@ -89,14 +90,30 @@ export function OpportunityCard({ op, onStatusChange }: OpportunityCardProps) {
   const [reply, setReply] = useState(op.suggestedReply);
   const [editing, setEditing] = useState(false);
   const [status, setStatus] = useState<Status>(op.status ?? 'pending');
+  const [copied, setCopied] = useState(false);
 
   const setS = (s: Status) => {
     setStatus(s);
     onStatusChange?.(op.id, s);
   };
 
-  const intentTone = INTENT_TONE[op.intent];
-  const Mention = MENTION_LABEL[op.productMention];
+  const handleOpenAndCopy = async () => {
+    const ok = await copyToClipboard(reply);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+    window.open(op.postUrl, '_blank', 'noopener,noreferrer');
+    setS('applied');
+  };
+
+  const intentTone = INTENT_TONE[op.intent] ?? INTENT_TONE.asking_recommendation;
+  const Mention = MENTION_LABEL[op.productMention] ?? MENTION_LABEL.do_not_mention;
+  const bullets = op.whyRelevantBullets ?? [];
+  const warnings = op.warnings ?? [];
+  const leadLabel = (op.leadPotentialLabel ?? 'Low') as LevelLabel;
+  const spamLabel = (op.spamRiskLabel ?? 'Low') as LevelLabel;
+  const strength = op.intentStrength ?? 'low';
 
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-100 shadow-card">
@@ -107,7 +124,13 @@ export function OpportunityCard({ op, onStatusChange }: OpportunityCardProps) {
             <div className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-semibold text-white">
               r/
             </div>
-            <span className="font-semibold text-slate-900">{op.subreddit}</span>
+            <a
+              href={subredditUrl(op.subreddit)}
+              {...REDDIT_LINK_PROPS}
+              className="font-semibold text-slate-900 hover:text-brand-700 hover:underline"
+            >
+              {op.subreddit}
+            </a>
             <span className="text-slate-300">·</span>
             <span className="text-slate-500">{timeAgo(op.postedAt)}</span>
             <span className="text-slate-300">·</span>
@@ -115,13 +138,27 @@ export function OpportunityCard({ op, onStatusChange }: OpportunityCardProps) {
               <ArrowBigUp className="h-3 w-3 text-orange-500" /> {formatNumber(op.upvotes)} upvotes
             </span>
           </div>
-          <h3 className="mt-2 text-[15px] font-semibold leading-snug text-slate-900">{op.postTitle}</h3>
+          <a
+            href={op.postUrl}
+            {...REDDIT_LINK_PROPS}
+            className="mt-2 block text-[15px] font-semibold leading-snug text-slate-900 hover:text-brand-700 hover:underline"
+          >
+            {op.postTitle}
+            <ExternalLink className="ml-1 inline h-3.5 w-3.5 -translate-y-0.5 text-slate-400" />
+          </a>
           <p className="mt-1.5 line-clamp-3 text-[13px] leading-relaxed text-slate-600">{op.postSnippet}</p>
 
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
             <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium ${intentTone.bg} ${intentTone.text}`}>
               {INTENT_LABEL[op.intent]}
             </span>
+            <a
+              href={op.postUrl}
+              {...REDDIT_LINK_PROPS}
+              className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50 hover:text-brand-700"
+            >
+              <ExternalLink className="h-3 w-3" /> View on Reddit
+            </a>
           </div>
         </div>
 
@@ -129,17 +166,21 @@ export function OpportunityCard({ op, onStatusChange }: OpportunityCardProps) {
         <div className="min-w-0 border-b border-slate-100 px-4 pb-4 pt-4 md:border-b-0 md:border-r">
           <div className="text-[12px] font-semibold text-slate-900">Why this is relevant</div>
           <ul className="mt-2 space-y-1.5 text-[13px]">
-            {op.whyRelevantBullets.map((b) => (
-              <li key={b} className="flex items-start gap-2 text-slate-700">
-                <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-slate-400" />
-                <span>{b}</span>
-              </li>
-            ))}
+            {bullets.length > 0 ? (
+              bullets.map((b, i) => (
+                <li key={`${b}-${i}`} className="flex items-start gap-2 text-slate-700">
+                  <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-slate-400" />
+                  <span>{b}</span>
+                </li>
+              ))
+            ) : (
+              <li className="text-slate-600">{op.whyRelevant}</li>
+            )}
           </ul>
           <div className="mt-3">
-            <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium ${STRENGTH_TONE[op.intentStrength]}`}>
+            <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium ${STRENGTH_TONE[strength]}`}>
               <Flame className="h-3 w-3" />
-              {STRENGTH_LABEL[op.intentStrength]}
+              {STRENGTH_LABEL[strength]}
             </span>
           </div>
         </div>
@@ -151,8 +192,8 @@ export function OpportunityCard({ op, onStatusChange }: OpportunityCardProps) {
               <Sparkles className="h-3.5 w-3.5 text-brand-500" /> AI suggested reply
             </div>
             <div className="flex flex-col items-end gap-1.5">
-              <MetricPill label="Lead potential" value={op.leadPotentialLabel} score={op.leadPotential} tone={LEVEL_TONE[op.leadPotentialLabel]} />
-              <MetricPill label="Spam risk" value={op.spamRiskLabel} score={op.spamRisk} tone={RISK_TONE[op.spamRiskLabel]} suffix="/100" />
+              <MetricPill label="Lead potential" value={leadLabel} score={op.leadPotential} tone={LEVEL_TONE[leadLabel]} />
+              <MetricPill label="Spam risk" value={spamLabel} score={op.spamRisk} tone={RISK_TONE[spamLabel]} suffix="/100" />
             </div>
           </div>
 
@@ -173,8 +214,13 @@ export function OpportunityCard({ op, onStatusChange }: OpportunityCardProps) {
           </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
-            <Button variant="primary" size="sm" onClick={() => setS('applied')}>
-              <Send className="h-3.5 w-3.5" /> Apply
+            <Button variant="primary" size="sm" onClick={handleOpenAndCopy}>
+              {copied ? (
+                <Check className="h-3.5 w-3.5" />
+              ) : (
+                <ExternalLink className="h-3.5 w-3.5" />
+              )}
+              {copied ? 'Copied — paste on Reddit' : 'Copy reply & open Reddit'}
             </Button>
             <Button variant="secondary" size="sm" onClick={() => setEditing((e) => !e)}>
               <Pencil className="h-3.5 w-3.5" /> {editing ? 'Done' : 'Edit'}
@@ -199,14 +245,18 @@ export function OpportunityCard({ op, onStatusChange }: OpportunityCardProps) {
               {status === 'applied' && <Check className="h-3 w-3" />}
               {status === 'skipped' && <X className="h-3 w-3" />}
               {status === 'saved' && <Bookmark className="h-3 w-3" />}
-              {status}
+              {status === 'applied'
+                ? 'Opened on Reddit'
+                : status === 'skipped'
+                  ? 'Skipped'
+                  : 'Saved for later'}
             </div>
           )}
 
-          {op.warnings.length > 0 && !editing && (
+          {warnings.length > 0 && !editing && (
             <div className="mt-2 flex items-start gap-1.5 rounded-md bg-amber-50 px-2 py-1.5 text-[11px] text-amber-800">
               <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
-              <span>{op.warnings[0]}</span>
+              <span>{warnings[0]}</span>
             </div>
           )}
         </div>

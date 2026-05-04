@@ -13,7 +13,13 @@ import { Card, CardBody, CardHeader, CardTitle, CardDescription } from '@/compon
 import { Badge } from '@/components/ui/Badge';
 import { ScoreBadge, ScoreBar } from '@/components/ui/ScoreBadge';
 import { KarmaPanel } from '@/components/strategy/KarmaPanel';
-import { mockStrategy } from '@/data/mockStrategy';
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+} from '@/components/ui/StateMessage';
+import { useFetch } from '@/lib/useFetch';
+import { api } from '@/lib/api';
 
 const PRIORITY_TONE: Record<'low' | 'medium' | 'high', 'neutral' | 'caution' | 'warn'> = {
   low: 'neutral',
@@ -30,7 +36,9 @@ const TYPE_TONE: Record<'comment' | 'post' | 'lurk' | 'karma' | 'avoid', 'good' 
 };
 
 export function Strategy() {
-  const s = mockStrategy;
+  const strategy = useFetch(() => api.getStrategy(), []);
+  const s = strategy.data;
+
   return (
     <>
       <PageHeader
@@ -39,11 +47,22 @@ export function Strategy() {
         description="A weekly view of where to listen, where to comment, where to post — and what to skip."
         actions={
           <Badge tone="brand">
-            <Compass className="h-3 w-3" /> Updated for this week
+            <Compass className="h-3 w-3" /> Generated from your data
           </Badge>
         }
       />
 
+      {strategy.loading && <LoadingState label="Generating playbook…" />}
+      {strategy.error && <ErrorState error={strategy.error} />}
+      {!strategy.loading && !strategy.error && s && s.bestSubreddits.length === 0 && (
+        <EmptyState
+          title="Not enough data for a strategy yet"
+          body="Add subreddits on the Listen page and run an ingest. Once we have insights and opportunities, the playbook will appear here."
+        />
+      )}
+
+      {s && s.bestSubreddits.length > 0 && (
+        <>
       <KarmaPanel karma={s.karma} />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
@@ -217,6 +236,8 @@ export function Strategy() {
           </div>
         </CardBody>
       </Card>
+        </>
+      )}
     </>
   );
 }

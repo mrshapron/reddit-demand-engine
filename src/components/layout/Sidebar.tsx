@@ -32,7 +32,7 @@ export function Sidebar() {
         <img
           src="/app-icon.png"
           alt="Enso AI"
-          className="h-10 w-10 shrink-0 rounded-full bg-slate-200 object-cover shadow-sm"
+          className="h-10 w-10 shrink-0 object-contain"
         />
         <div className="leading-tight">
           <div className="text-base font-semibold text-slate-900">Enso AI</div>

@@ -1,28 +1,35 @@
 import { useMemo, useState } from 'react';
-import { Filter, RefreshCcw } from 'lucide-react';
+import { Filter } from 'lucide-react';
 import { StreamLayout } from '@/components/layout/StreamLayout';
 import { OpportunityCard } from '@/components/respond/OpportunityCard';
-import { mockRedditOpportunities } from '@/data/mockRedditPosts';
-import type { RedditOpportunity } from '@/types/reddit';
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+} from '@/components/ui/StateMessage';
+import { IngestButton } from '@/components/ui/IngestButton';
+import { useFetch } from '@/lib/useFetch';
+import { api } from '@/lib/api';
 
 type Status = 'pending' | 'applied' | 'skipped' | 'saved';
 type Sort = 'lead' | 'risk' | 'recent';
 
 export function RespondToPosts() {
   const [sort, setSort] = useState<Sort>('lead');
-  const [, setStatuses] = useState<Record<string, Status>>({});
+  const ops = useFetch(() => api.listOpportunities(50), []);
 
-  const onStatusChange = (id: string, status: Status) =>
-    setStatuses((m) => ({ ...m, [id]: status }));
+  const onStatusChange = (id: string, status: Status) => {
+    void api.setOpportunityStatus(id, status).catch(() => undefined);
+  };
 
   const list = useMemo(() => {
-    const l: RedditOpportunity[] = [...mockRedditOpportunities];
-    return l.sort((a, b) => {
+    const data = ops.data ?? [];
+    return [...data].sort((a, b) => {
       if (sort === 'lead') return b.leadPotential - a.leadPotential;
       if (sort === 'risk') return a.spamRisk - b.spamRisk;
       return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
     });
-  }, [sort]);
+  }, [ops.data, sort]);
 
   return (
     <StreamLayout
@@ -44,12 +51,19 @@ export function RespondToPosts() {
               </button>
             ))}
           </div>
-          <button className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-100 text-slate-500 hover:bg-slate-50">
-            <RefreshCcw className="h-3.5 w-3.5" />
-          </button>
+          <IngestButton onDone={() => void ops.refetch()} />
         </>
       }
     >
+      {ops.loading && <LoadingState label="Loading opportunities…" />}
+      {ops.error && <ErrorState error={ops.error} />}
+      {!ops.loading && !ops.error && list.length === 0 && (
+        <EmptyState
+          title="No opportunities yet"
+          body="Add some target subreddits on the Listen page and run an ingest. We'll surface high-intent posts and draft suggested replies here."
+        />
+      )}
+
       {list.map((op) => (
         <OpportunityCard key={op.id} op={op} onStatusChange={onStatusChange} />
       ))}

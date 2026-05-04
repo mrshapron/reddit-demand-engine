@@ -14,21 +14,32 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardBody, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
-import { mockSubreddits } from '@/data/mockSubreddits';
-import { mockRedditOpportunities } from '@/data/mockRedditPosts';
-import { mockGeneratedPosts } from '@/data/mockGeneratedPosts';
-import { mockStrategy } from '@/data/mockStrategy';
+import { useFetch } from '@/lib/useFetch';
+import { api } from '@/lib/api';
 import { useCompanyProfile } from '@/store/companyStore';
 import { intentLabel } from '@/utils/scoring';
 import { PRINCIPLES } from '@/utils/copy';
+import { IngestButton } from '@/components/ui/IngestButton';
+import { REDDIT_LINK_PROPS, subredditUrl } from '@/lib/reddit';
+import { ExternalLink } from 'lucide-react';
 
 export function Dashboard() {
   const { profile, isComplete } = useCompanyProfile();
-  const topSr = [...mockSubreddits].sort((a, b) => b.audienceFit - a.audienceFit).slice(0, 3);
-  const topOps = [...mockRedditOpportunities]
+  const subs = useFetch(() => api.listSubreddits(), []);
+  const ops = useFetch(() => api.listOpportunities(50), []);
+  const drafts = useFetch(() => api.listDrafts(), []);
+  const strategy = useFetch(() => api.getStrategy(), []);
+
+  const subList = subs.data ?? [];
+  const opsList = ops.data ?? [];
+  const draftsList = drafts.data ?? [];
+  const planList = strategy.data?.postingPlan ?? [];
+
+  const topSr = [...subList].sort((a, b) => b.audienceFit - a.audienceFit).slice(0, 3);
+  const topOps = [...opsList]
     .sort((a, b) => b.leadPotential - a.leadPotential)
     .slice(0, 3);
-  const topPosts = mockGeneratedPosts.slice(0, 2);
+  const topPosts = draftsList.slice(0, 2);
 
   return (
     <>
@@ -44,6 +55,15 @@ export function Dashboard() {
             >
               {isComplete ? 'Edit profile' : 'Complete profile'}
             </Link>
+            <IngestButton
+              size="md"
+              label="Ingest now"
+              onDone={() => {
+                void subs.refetch();
+                void ops.refetch();
+                void strategy.refetch();
+              }}
+            />
             <Link
               to="/respond"
               className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 text-sm font-medium text-white shadow-sm hover:bg-brand-700"
@@ -58,20 +78,20 @@ export function Dashboard() {
         <Stat
           icon={<Headphones className="h-4 w-4" />}
           label="Subreddits surfaced"
-          value={mockSubreddits.length}
+          value={subList.length}
           to="/listen"
         />
         <Stat
           icon={<MessageSquareReply className="h-4 w-4" />}
           label="Reply opportunities"
-          value={mockRedditOpportunities.length}
+          value={opsList.length}
           to="/respond"
           accent
         />
         <Stat
           icon={<PenLine className="h-4 w-4" />}
           label="Drafted posts"
-          value={mockGeneratedPosts.length}
+          value={draftsList.length}
           to="/generate"
         />
       </div>
@@ -94,26 +114,43 @@ export function Dashboard() {
             </div>
           </CardHeader>
           <CardBody>
-            <ul className="divide-y divide-slate-100">
-              {topOps.map((op) => (
-                <li key={op.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
-                  <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
-                    <MessageSquareReply className="h-3.5 w-3.5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-semibold text-brand-700">{op.subreddit}</span>
-                      <Badge tone="info">{intentLabel(op.intent)}</Badge>
+            {topOps.length === 0 ? (
+              <p className="text-sm text-slate-500">
+                No opportunities yet — add subreddits on the Listen page and run an ingest.
+              </p>
+            ) : (
+              <ul className="divide-y divide-slate-100">
+                {topOps.map((op) => (
+                  <li key={op.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+                      <MessageSquareReply className="h-3.5 w-3.5" />
                     </div>
-                    <div className="mt-0.5 truncate text-sm font-medium text-slate-900">
-                      {op.postTitle}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <a
+                          href={subredditUrl(op.subreddit)}
+                          {...REDDIT_LINK_PROPS}
+                          className="text-xs font-semibold text-brand-700 hover:underline"
+                        >
+                          {op.subreddit}
+                        </a>
+                        <Badge tone="info">{intentLabel(op.intent)}</Badge>
+                      </div>
+                      <a
+                        href={op.postUrl}
+                        {...REDDIT_LINK_PROPS}
+                        className="mt-0.5 block truncate text-sm font-medium text-slate-900 hover:text-brand-700 hover:underline"
+                      >
+                        {op.postTitle}
+                        <ExternalLink className="ml-1 inline h-3 w-3 -translate-y-0.5 text-slate-400" />
+                      </a>
+                      <div className="mt-0.5 line-clamp-1 text-xs text-slate-500">{op.whyRelevant}</div>
                     </div>
-                    <div className="mt-0.5 line-clamp-1 text-xs text-slate-500">{op.whyRelevant}</div>
-                  </div>
-                  <ScoreBadge label="Lead" score={op.leadPotential} />
-                </li>
-              ))}
-            </ul>
+                    <ScoreBadge label="Lead" score={op.leadPotential} />
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardBody>
         </Card>
 
@@ -124,20 +161,24 @@ export function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardBody>
-            <ol className="space-y-3 text-sm">
-              {mockStrategy.postingPlan.map((p, i) => (
-                <li key={p.day} className="flex gap-3">
-                  <div className="flex h-6 w-10 shrink-0 items-center justify-center rounded-md bg-slate-100 text-[11px] font-semibold text-slate-700">
-                    {p.day}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-slate-900">{p.action}</div>
-                    <div className="text-xs text-slate-500">{p.why}</div>
-                  </div>
-                  {i === 0 && <Badge tone="brand">today</Badge>}
-                </li>
-              ))}
-            </ol>
+            {planList.length === 0 ? (
+              <p className="text-sm text-slate-500">Generated after your first ingest.</p>
+            ) : (
+              <ol className="space-y-3 text-sm">
+                {planList.map((p, i) => (
+                  <li key={`${p.day}-${i}`} className="flex gap-3">
+                    <div className="flex h-6 w-10 shrink-0 items-center justify-center rounded-md bg-slate-100 text-[11px] font-semibold text-slate-700">
+                      {p.day}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-slate-900">{p.action}</div>
+                      <div className="text-xs text-slate-500">{p.why}</div>
+                    </div>
+                    {i === 0 && <Badge tone="brand">today</Badge>}
+                  </li>
+                ))}
+              </ol>
+            )}
           </CardBody>
         </Card>
       </div>
@@ -155,17 +196,28 @@ export function Dashboard() {
             </div>
           </CardHeader>
           <CardBody>
-            <ul className="space-y-3">
-              {topSr.map((s) => (
-                <li key={s.name} className="flex items-start gap-3 rounded-lg border border-slate-100 bg-slate-100 p-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium text-slate-900">{s.name}</div>
-                    <div className="line-clamp-2 text-xs text-slate-500">{s.whyRelevant}</div>
-                  </div>
-                  <ScoreBadge label="Fit" score={s.audienceFit} />
-                </li>
-              ))}
-            </ul>
+            {topSr.length === 0 ? (
+              <p className="text-sm text-slate-500">No analyzed subreddits yet.</p>
+            ) : (
+              <ul className="space-y-3">
+                {topSr.map((s) => (
+                  <li key={s.name} className="flex items-start gap-3 rounded-lg border border-slate-100 bg-slate-100 p-3">
+                    <div className="min-w-0 flex-1">
+                      <a
+                        href={subredditUrl(s.name)}
+                        {...REDDIT_LINK_PROPS}
+                        className="inline-flex items-center gap-1 font-medium text-slate-900 hover:text-brand-700 hover:underline"
+                      >
+                        {s.name}
+                        <ExternalLink className="h-3 w-3 text-slate-400" />
+                      </a>
+                      <div className="line-clamp-2 text-xs text-slate-500">{s.whyRelevant}</div>
+                    </div>
+                    <ScoreBadge label="Fit" score={s.audienceFit} />
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardBody>
         </Card>
 
@@ -181,17 +233,21 @@ export function Dashboard() {
             </div>
           </CardHeader>
           <CardBody>
-            <ul className="space-y-3">
-              {topPosts.map((p) => (
-                <li key={p.id} className="rounded-lg border border-slate-100 bg-slate-100 p-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-brand-700">{p.subreddit}</span>
-                    <Badge tone="brand">{p.postType.replace(/_/g, ' ')}</Badge>
-                  </div>
-                  <div className="mt-1 line-clamp-2 text-sm font-medium text-slate-900">{p.title}</div>
-                </li>
-              ))}
-            </ul>
+            {topPosts.length === 0 ? (
+              <p className="text-sm text-slate-500">No drafts yet — generate one from the Generate Posts page.</p>
+            ) : (
+              <ul className="space-y-3">
+                {topPosts.map((p) => (
+                  <li key={p.id} className="rounded-lg border border-slate-100 bg-slate-100 p-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-brand-700">{p.subreddit}</span>
+                      <Badge tone="brand">{p.postType.replace(/_/g, ' ')}</Badge>
+                    </div>
+                    <div className="mt-1 line-clamp-2 text-sm font-medium text-slate-900">{p.title}</div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardBody>
         </Card>
       </div>
