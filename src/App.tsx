@@ -5,6 +5,7 @@ import { CompanyProfile } from '@/pages/CompanyProfile';
 import { Listen } from '@/pages/Listen';
 import { RespondToPosts } from '@/pages/RespondToPosts';
 import { GeneratePosts } from '@/pages/GeneratePosts';
+import { Scheduler } from '@/pages/Scheduler';
 import { Strategy } from '@/pages/Strategy';
 import { Settings } from '@/pages/Settings';
 import { Onboarding } from '@/pages/Onboarding';
@@ -37,6 +38,7 @@ export default function App() {
         <Route path="listen" element={<Listen />} />
         <Route path="respond" element={<RespondToPosts />} />
         <Route path="generate" element={<GeneratePosts />} />
+        <Route path="scheduler" element={<Scheduler />} />
         <Route path="strategy" element={<Strategy />} />
         <Route path="settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

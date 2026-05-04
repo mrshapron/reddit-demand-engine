@@ -89,3 +89,25 @@ export interface GeneratedPostDraft {
   approved?: boolean;
   warnings: string[];
 }
+
+export type ScheduledPostStatus =
+  | 'approved'
+  | 'scheduled'
+  | 'needs_final_review'
+  | 'ready_for_reddit_api';
+
+export interface ScheduledPost {
+  id: string;
+  sourceDraftId: string;
+  subreddit: string;
+  title: string;
+  bodyPreview: string;
+  postType: GeneratedPostType;
+  scheduledFor: string;
+  status: ScheduledPostStatus;
+  spamRisk: number;
+  promotionTolerance: PromotionTolerance;
+  recommendedCta: string;
+  safetyNotes: string[];
+  businessGoal: string;
+}

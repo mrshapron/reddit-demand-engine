@@ -196,20 +196,21 @@ export function Strategy() {
           </CardBody>
         </Card>
 
-        <Card>
+        <Card className="border-rose-200/70 bg-rose-950/10">
           <CardHeader>
             <CardTitle className="inline-flex items-center gap-2">
               <XCircle className="h-4 w-4 text-rose-500" /> What to avoid this week
             </CardTitle>
+            <CardDescription>High-risk actions that can make the account look promotional.</CardDescription>
           </CardHeader>
           <CardBody>
             <ul className="space-y-2 text-sm">
               {s.thingsToAvoid.map((t) => (
                 <li
                   key={t}
-                  className="flex items-start gap-2 rounded-lg border border-rose-100 bg-rose-50/40 p-2.5 text-rose-800"
+                  className="flex items-start gap-2 rounded-lg border border-rose-300/35 bg-rose-500/10 p-2.5 text-rose-100 shadow-sm"
                 >
-                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-300" />
                   <span>{t}</span>
                 </li>
               ))}

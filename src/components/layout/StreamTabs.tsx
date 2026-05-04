@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom';
-import { Headphones, MessageSquareReply, PenLine } from 'lucide-react';
+import { CalendarClock, Headphones, MessageSquareReply, PenLine } from 'lucide-react';
 import { classNames } from '@/utils/copy';
 
 const TABS = [
   { to: '/listen', label: 'Listen', icon: Headphones },
   { to: '/respond', label: 'Respond to Posts', icon: MessageSquareReply },
   { to: '/generate', label: 'Generate Posts', icon: PenLine },
+  { to: '/scheduler', label: 'Scheduler', icon: CalendarClock },
 ];
 
 export function StreamTabs() {

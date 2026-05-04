@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   Building2,
+  CalendarClock,
   Headphones,
   MessageSquareReply,
   PenLine,
@@ -18,6 +19,7 @@ const NAV = [
   { to: '/listen', label: 'Listen', icon: Headphones },
   { to: '/respond', label: 'Respond to Posts', icon: MessageSquareReply },
   { to: '/generate', label: 'Generate Posts', icon: PenLine },
+  { to: '/scheduler', label: 'Scheduler', icon: CalendarClock },
   { to: '/strategy', label: 'Strategy', icon: Compass },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
@@ -27,7 +29,7 @@ export function Sidebar() {
   const usedPct = Math.min(100, Math.round((w.creditsUsed / w.creditsTotal) * 100));
 
   return (
-    <aside className="hidden w-60 shrink-0 border-r border-slate-200 bg-slate-100 md:flex md:flex-col">
+    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r border-slate-200 bg-slate-100 md:flex md:flex-col">
       <div className="flex items-center gap-3 border-b border-slate-100 px-5 py-5">
         <img
           src="/app-icon.png"
@@ -40,7 +42,7 @@ export function Sidebar() {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-0.5 px-3 py-4">
+      <nav className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
         {NAV.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
@@ -61,7 +63,7 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="space-y-3 border-t border-slate-100 p-4">
+      <div className="shrink-0 space-y-3 border-t border-slate-100 p-4">
         <button className="flex w-full items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-left transition-colors hover:bg-slate-50">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-600 text-[11px] font-semibold uppercase text-white">
             {w.workspaceShort}

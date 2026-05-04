@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
+  CalendarClock,
   Pencil,
   Copy,
   RefreshCcw,
@@ -17,8 +19,10 @@ import { Input, Textarea } from '@/components/ui/Input';
 import type { GeneratedPostDraft } from '@/types/reddit';
 import { postTypeLabel, tolerationLabel } from '@/utils/scoring';
 import { REDDIT_LINK_PROPS, subredditUrl } from '@/lib/reddit';
+import { addDraftToSchedule } from '@/store/schedulerStore';
 
 export function GeneratedPostCard({ draft }: { draft: GeneratedPostDraft }) {
+  const navigate = useNavigate();
   const [title, setTitle] = useState(draft.title);
   const [body, setBody] = useState(draft.body);
   const [editing, setEditing] = useState(false);
@@ -45,6 +49,18 @@ export function GeneratedPostCard({ draft }: { draft: GeneratedPostDraft }) {
     const sub = draft.subreddit.replace(/^r\//, '').replace(/^\/+|\/+$/g, '');
     const url = `https://www.reddit.com/r/${sub}/submit?title=${encodeURIComponent(title)}&type=TEXT`;
     window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const onSchedule = () => {
+    addDraftToSchedule({ ...draft, title, body }, 'scheduled');
+    setApproved(true);
+    navigate('/scheduler');
+  };
+
+  const onApprove = () => {
+    addDraftToSchedule({ ...draft, title, body }, 'approved');
+    setApproved(true);
+    navigate('/scheduler');
   };
 
   return (
@@ -149,7 +165,10 @@ export function GeneratedPostCard({ draft }: { draft: GeneratedPostDraft }) {
           <Button variant="secondary" size="sm" onClick={onOpenSubmit}>
             <ExternalLink className="h-3.5 w-3.5" /> Open submit form
           </Button>
-          <Button variant={approved ? 'subtle' : 'primary'} size="sm" onClick={() => setApproved((a) => !a)}>
+          <Button variant="secondary" size="sm" onClick={onSchedule}>
+            <CalendarClock className="h-3.5 w-3.5" /> Schedule
+          </Button>
+          <Button variant={approved ? 'subtle' : 'primary'} size="sm" onClick={onApprove}>
             <CheckCircle2 className="h-3.5 w-3.5" />
             {approved ? 'Approved' : 'Mark approved'}
           </Button>

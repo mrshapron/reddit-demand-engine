@@ -38,7 +38,7 @@ export function Dashboard() {
   const topSr = [...subList].sort((a, b) => b.audienceFit - a.audienceFit).slice(0, 3);
   const topOps = [...opsList]
     .sort((a, b) => b.leadPotential - a.leadPotential)
-    .slice(0, 3);
+    .slice(0, 6);
   const topPosts = draftsList.slice(0, 2);
 
   return (
@@ -164,17 +164,19 @@ export function Dashboard() {
             {planList.length === 0 ? (
               <p className="text-sm text-slate-500">Generated after your first ingest.</p>
             ) : (
-              <ol className="space-y-3 text-sm">
+              <ol className="space-y-4 text-sm">
                 {planList.map((p, i) => (
-                  <li key={`${p.day}-${i}`} className="flex gap-3">
+                  <li key={`${p.day}-${i}`} className="flex items-start gap-3">
                     <div className="flex h-6 w-10 shrink-0 items-center justify-center rounded-md bg-slate-100 text-[11px] font-semibold text-slate-700">
                       {p.day}
                     </div>
-                    <div className="min-w-0">
-                      <div className="text-slate-900">{p.action}</div>
-                      <div className="text-xs text-slate-500">{p.why}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="text-slate-900">{p.action}</div>
+                        {i === 0 && <Badge tone="brand">today</Badge>}
+                      </div>
+                      <div className="mt-0.5 text-xs text-slate-500">{p.why}</div>
                     </div>
-                    {i === 0 && <Badge tone="brand">today</Badge>}
                   </li>
                 ))}
               </ol>
@@ -296,22 +298,22 @@ function Stat({
   return (
     <Link
       to={to}
-      className={`group rounded-xl border p-4 transition-colors ${
+      className={`group rounded-xl border px-4 py-3 text-center transition-colors ${
         accent
           ? 'border-brand-200 bg-brand-50/40 hover:bg-brand-50'
           : 'border-slate-200 bg-slate-100 hover:border-brand-200'
       }`}
     >
-      <div className="flex items-center justify-between">
+      <div className="relative flex items-center justify-center">
         <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${
           accent ? 'bg-brand-100 text-brand-700' : 'bg-slate-100 text-slate-700'
         }`}>
           {icon}
         </div>
-        <ArrowUpRight className="h-4 w-4 text-slate-400 transition-colors group-hover:text-brand-600" />
+        <ArrowUpRight className="absolute right-0 h-4 w-4 text-slate-400 transition-colors group-hover:text-brand-600" />
       </div>
-      <div className="mt-3 text-2xl font-semibold tabular-nums text-slate-900">{value}</div>
-      <div className="text-xs font-medium text-slate-500">{label}</div>
+      <div className="mt-2 text-xl font-semibold tabular-nums text-slate-900">{value}</div>
+      <div className="mt-0.5 text-xs font-medium text-slate-500">{label}</div>
     </Link>
   );
 }
