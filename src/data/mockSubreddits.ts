@@ -1,0 +1,191 @@
+import type { SubredditInsight } from '@/types/reddit';
+
+export const mockSubreddits: SubredditInsight[] = [
+  {
+    name: 'r/RevOps',
+    description:
+      'Practitioners discussing tooling, GTM systems, and the day-to-day of running revenue operations.',
+    members: 28400,
+    whyRelevant:
+      'Your ICP lives here. Posts almost daily about Zapier breaking at scale and looking for "real" workflow tools.',
+    audienceFit: 96,
+    leadPotential: 88,
+    promotionTolerance: 'low',
+    spamRisk: 38,
+    recommendedAction: 'comment_before_posting',
+    commonQuestions: [
+      'How do you handle approval workflows without engineering?',
+      'Best Zapier alternative when you have 100+ Zaps?',
+      'How do you audit who changed what in your automations?',
+    ],
+    repeatedPains: [
+      'Silent Zap failures discovered weeks later',
+      'No version control on critical workflows',
+      'Approvals stuck in Slack DMs forever',
+    ],
+    competitorMentions: ['Zapier', 'Workato', 'Tray.io', 'n8n'],
+    customerLanguage: ['workflow drift', 'glue ops', 'ops stack', 'plumbing', 'paging engineering'],
+    contentAngles: [
+      'Lessons from migrating 142 Zaps to a real workflow engine',
+      'How we cut workflow incidents 78% in one quarter',
+      'A practical checklist for auditing your ops stack',
+    ],
+    rules: [
+      'No direct promotion in top-level posts',
+      'Self-promo limited to Friday self-promo thread',
+      'Link drops without context will be removed',
+    ],
+    karmaRequirement: 'medium',
+  },
+  {
+    name: 'r/SaaS',
+    description: 'SaaS founders, operators, and builders sharing playbooks and asking for advice.',
+    members: 312000,
+    whyRelevant:
+      'Founders here are the buyer or champion at <50 person SaaS companies. High volume of "how do you handle X" posts.',
+    audienceFit: 84,
+    leadPotential: 72,
+    promotionTolerance: 'medium',
+    spamRisk: 55,
+    recommendedAction: 'safe_for_educational_posts',
+    commonQuestions: [
+      'How are you automating onboarding without an engineer?',
+      'What\'s your stack for closed-won handoff?',
+      'Tools to replace 30 Zaps that keep breaking?',
+    ],
+    repeatedPains: [
+      'Tool sprawl across HubSpot, Stripe, Slack, Notion',
+      'Founder is also the ops person',
+      'Cannot afford a $40k/yr workflow tool',
+    ],
+    competitorMentions: ['Zapier', 'Make', 'Pipedream', 'n8n'],
+    customerLanguage: ['founder ops', 'duct tape', 'glue code', 'one-person ops team'],
+    contentAngles: [
+      'I analyzed 100 r/SaaS posts about automation — here\'s what people actually struggle with',
+      '5 lessons from running ops at a 40-person SaaS without engineering',
+      'A boring-but-working ops stack for sub-50-person companies',
+    ],
+    rules: [
+      'No "check out my product" posts',
+      'Posts must add value, not promote',
+      'Self-promo flair required if promoting',
+    ],
+    karmaRequirement: 'low',
+  },
+  {
+    name: 'r/salesforce',
+    description: 'Salesforce admins, devs, and architects.',
+    members: 142000,
+    whyRelevant:
+      'Salesforce admins doubling as ops are a key persona. They search for tools that play well with SFDC and survive audits.',
+    audienceFit: 78,
+    leadPotential: 70,
+    promotionTolerance: 'low',
+    spamRisk: 60,
+    recommendedAction: 'lurk_first',
+    commonQuestions: [
+      'Best way to trigger external workflows from Process Builder?',
+      'Anyone else burned by Zapier rate limits on SFDC?',
+      'How do you keep workflow logic out of Apex?',
+    ],
+    repeatedPains: [
+      'Flow + Zapier + Workato Frankenstein',
+      'No clear audit trail across systems',
+      'Admin gets paged when a Zap breaks at midnight',
+    ],
+    competitorMentions: ['Workato', 'Tray.io', 'MuleSoft', 'Zapier'],
+    customerLanguage: ['Flow', 'Apex', 'admin', 'governor limits', 'audit trail'],
+    contentAngles: [
+      'Keeping ops logic out of Apex: a pattern that worked for us',
+      'How we cut SFDC-related workflow incidents in half',
+    ],
+    rules: ['No vendor pitches', 'Tag posts properly', 'Mods are strict on self-promo'],
+    karmaRequirement: 'medium',
+  },
+  {
+    name: 'r/startups',
+    description: 'Startup founders, operators, and early employees.',
+    members: 1900000,
+    whyRelevant:
+      'Massive reach but heavily moderated. Good for educational long-form posts; bad for any direct linking.',
+    audienceFit: 62,
+    leadPotential: 48,
+    promotionTolerance: 'none',
+    spamRisk: 78,
+    recommendedAction: 'avoid_direct_promotion',
+    commonQuestions: [
+      'How are early-stage founders handling ops without an ops hire?',
+      'When do you stop using Zapier and build something real?',
+    ],
+    repeatedPains: [
+      'Founder time eaten by glue work',
+      'No bandwidth to evaluate enterprise tools',
+    ],
+    competitorMentions: ['Zapier', 'Make'],
+    customerLanguage: ['founder mode', 'wearing all hats', 'pre-PMF'],
+    contentAngles: [
+      'When we stopped using Zapier and what we replaced it with (no link, happy to DM)',
+    ],
+    rules: [
+      'Strict no-promotion policy',
+      'No links to your product',
+      'Mods remove anything that smells like marketing',
+    ],
+    karmaRequirement: 'high',
+  },
+  {
+    name: 'r/CustomerSuccess',
+    description: 'CS leaders, ops, and ICs.',
+    members: 18200,
+    whyRelevant:
+      'Customer ops is part of your ICP. Frequent posts about handoff workflows and detractor playbooks.',
+    audienceFit: 81,
+    leadPotential: 74,
+    promotionTolerance: 'low',
+    spamRisk: 42,
+    recommendedAction: 'comment_before_posting',
+    commonQuestions: [
+      'How are you automating churn-risk alerts?',
+      'NPS detractor → CS workflow that actually works?',
+      'Tools for closed-won → CS handoff that don\'t require engineering?',
+    ],
+    repeatedPains: [
+      'Handoff happens in Slack DMs and gets lost',
+      'CS leaders flying blind on account changes',
+      'Manual playbooks that nobody runs',
+    ],
+    competitorMentions: ['Catalyst', 'Vitally', 'Zapier'],
+    customerLanguage: ['handoff', 'health score', 'playbook', 'detractor'],
+    contentAngles: [
+      'A handoff workflow that survived our last reorg',
+      'Detractor → playbook automation: what worked, what didn\'t',
+    ],
+    rules: ['No vendor name-drops', 'Practitioner content only'],
+    karmaRequirement: 'low',
+  },
+  {
+    name: 'r/nocode',
+    description: 'No-code builders, makers, and tinkerers.',
+    members: 72000,
+    whyRelevant:
+      'Not your direct ICP — but a feeder community for ops people who have outgrown no-code. Educational posts perform.',
+    audienceFit: 58,
+    leadPotential: 40,
+    promotionTolerance: 'medium',
+    spamRisk: 48,
+    recommendedAction: 'safe_for_educational_posts',
+    commonQuestions: [
+      'When do you outgrow Zapier?',
+      'How do you keep no-code workflows from becoming spaghetti?',
+    ],
+    repeatedPains: ['Spaghetti Zaps', 'Hitting Zapier task limits', 'No way to test changes safely'],
+    competitorMentions: ['Zapier', 'Make', 'n8n', 'Bubble'],
+    customerLanguage: ['spaghetti', 'task limits', 'staging', 'duct tape'],
+    contentAngles: [
+      'Signs you\'ve outgrown Zapier (and what to do about it)',
+      'A practical checklist before migrating off Zapier',
+    ],
+    rules: ['Self-promo flair required', 'No affiliate links'],
+    karmaRequirement: 'low',
+  },
+];
