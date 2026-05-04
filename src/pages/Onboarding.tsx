@@ -79,12 +79,7 @@ export function Onboarding() {
       }
     }
     if (index < STEPS.length - 1) {
-      try {
-        await saveProfile(profile);
-      } catch (e) {
-        setError((e as Error).message);
-        return;
-      }
+      await saveProfile(profile);
       setIndex(index + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -109,12 +104,8 @@ export function Onboarding() {
 
   const finish = async () => {
     setError(null);
-    try {
-      await saveProfile(profile);
-      navigate('/dashboard');
-    } catch (e) {
-      setError((e as Error).message);
-    }
+    await saveProfile(profile);
+    navigate('/dashboard');
   };
 
   return (

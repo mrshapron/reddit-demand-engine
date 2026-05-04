@@ -86,8 +86,11 @@ export function CompanyProfileProvider({ children }: { children: React.ReactNode
       setProfile(server);
       cacheProfile(server);
     } catch (e) {
+      // GitHub Pages only hosts the frontend. Keep the demo usable by saving locally
+      // when the API is unavailable.
+      setProfile(next);
+      cacheProfile(next);
       setError(e as Error);
-      throw e;
     } finally {
       setSaving(false);
     }
