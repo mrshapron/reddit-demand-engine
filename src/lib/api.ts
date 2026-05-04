@@ -15,6 +15,7 @@ const BASE = '/api';
 const IS_STATIC_DEMO = import.meta.env.BASE_URL !== '/';
 const PROFILE_STORAGE_KEY = 'rde:companyProfile:v2';
 const CONFIGURED_SUBREDDITS_KEY = 'rde:configuredSubreddits:v1';
+const GENERATED_DRAFTS_KEY = 'rde:generatedDrafts:v1';
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -108,19 +109,31 @@ const staticApi = {
       },
     }),
 
-  listDrafts: () => staticDelay<GeneratedPostDraft[]>(mockGeneratedPosts),
+  listDrafts: () =>
+    staticDelay<GeneratedPostDraft[]>(
+      readJson(GENERATED_DRAFTS_KEY, mockGeneratedPosts),
+    ),
   generateDraft: (subreddit: string, postType?: GeneratedPostDraft['postType']) => {
     const base =
       mockGeneratedPosts.find((draft) => draft.postType === postType) ?? mockGeneratedPosts[0]!;
-    return staticDelay<GeneratedPostDraft>({
+    const draft: GeneratedPostDraft = {
       ...base,
       id: `static-${Date.now()}`,
       subreddit,
       postType: postType ?? base.postType,
-    });
+      title: `${base.title}`,
+    };
+    const current = readJson(GENERATED_DRAFTS_KEY, mockGeneratedPosts);
+    writeJson(GENERATED_DRAFTS_KEY, [draft, ...current]);
+    return staticDelay<GeneratedPostDraft>(draft);
   },
   setDraftApproved: (id: string, approved: boolean) => {
-    const draft = mockGeneratedPosts.find((item) => item.id === id) ?? mockGeneratedPosts[0]!;
+    const current = readJson(GENERATED_DRAFTS_KEY, mockGeneratedPosts);
+    const draft = current.find((item) => item.id === id) ?? mockGeneratedPosts[0]!;
+    writeJson(
+      GENERATED_DRAFTS_KEY,
+      current.map((item) => (item.id === id ? { ...item, approved } : item)),
+    );
     return staticDelay<GeneratedPostDraft>({ ...draft, approved });
   },
 
