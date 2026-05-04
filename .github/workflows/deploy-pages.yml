@@ -35,6 +35,7 @@ jobs:
         run: npm run build
         env:
           GITHUB_PAGES: 'true'
+          VITE_CLAUDE_API_BASE_URL: ${{ vars.VITE_CLAUDE_API_BASE_URL }}
 
       - name: Add single-page app fallback
         run: cp dist/index.html dist/404.html

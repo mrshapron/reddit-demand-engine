@@ -243,12 +243,37 @@ npm run server:ingest -- r/SaaS r/RevOps
 
 ## Next Steps
 
+- Deploy the Claude API on Vercel and set `ANTHROPIC_API_KEY` there.
+- Add `VITE_CLAUDE_API_BASE_URL` as a GitHub repo variable so GitHub Pages can call the Vercel API.
 - Connect full Reddit OAuth for posting permissions.
 - Store scheduled posts and tracking data in the backend database.
 - Add automated scheduled publishing after human approval.
 - Track real post comments, replies, engagement, and karma.
 - Add team authentication and multi-workspace support.
 - Add notifications for high-intent reply opportunities.
+
+## Claude API For The Hosted Demo
+
+GitHub Pages is static and cannot safely store an AI API key. Claude generation is handled through Vercel serverless functions in:
+
+```text
+api/claude/generate-draft.js
+api/claude/regenerate-reply.js
+```
+
+Set this secret in Vercel:
+
+```text
+ANTHROPIC_API_KEY
+```
+
+Then set this GitHub repository variable:
+
+```text
+VITE_CLAUDE_API_BASE_URL=https://your-vercel-project.vercel.app
+```
+
+Without `VITE_CLAUDE_API_BASE_URL`, the GitHub Pages app falls back to local mock generation.
 
 ## Core Message
 

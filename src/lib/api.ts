@@ -13,6 +13,7 @@ import type { StrategySnapshot } from '@/types/strategy';
 
 const BASE = '/api';
 const IS_STATIC_DEMO = import.meta.env.BASE_URL !== '/';
+const CLAUDE_API_BASE = import.meta.env.VITE_CLAUDE_API_BASE_URL?.replace(/\/$/, '') ?? '';
 const PROFILE_STORAGE_KEY = 'rde:companyProfile:v2';
 const CONFIGURED_SUBREDDITS_KEY = 'rde:configuredSubreddits:v1';
 const GENERATED_DRAFTS_KEY = 'rde:generatedDrafts:v1';
@@ -36,6 +37,22 @@ function writeJson<T>(key: string, value: T) {
 
 function staticDelay<T>(value: T): Promise<T> {
   return Promise.resolve(value);
+}
+
+async function callHostedClaude<T>(path: string, body: unknown): Promise<T | null> {
+  if (!CLAUDE_API_BASE) return null;
+
+  const response = await fetch(`${CLAUDE_API_BASE}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Claude API failed with ${response.status}`);
+  }
+
+  return response.json() as Promise<T>;
 }
 
 const staticApi = {
@@ -100,28 +117,60 @@ const staticApi = {
     const opportunity = mockRedditOpportunities.find((item) => item.id === id) ?? mockRedditOpportunities[0]!;
     return staticDelay<RedditOpportunity>({ ...opportunity, status });
   },
-  regenerateReply: (_id: string) =>
-    staticDelay({
+  regenerateReply: async (id: string) => {
+    const opportunity = mockRedditOpportunities.find((item) => item.id === id) ?? mockRedditOpportunities[0]!;
+    const companyProfile = readJson(PROFILE_STORAGE_KEY, mockCompanyProfile);
+    const hosted = await callHostedClaude<{
+      triage: unknown;
+      reply: { suggestedReply: string; replyStrategy: string };
+    }>('/api/claude/regenerate-reply', { companyProfile, opportunity });
+
+    if (hosted) return hosted;
+
+    return staticDelay({
       triage: {},
       reply: {
         suggestedReply: 'Static demo reply regenerated locally. Connect the backend for live LLM generation.',
         replyStrategy: 'Keep the response helpful, specific, and non-promotional.',
       },
-    }),
+    });
+  },
 
   listDrafts: () =>
     staticDelay<GeneratedPostDraft[]>(
       readJson(GENERATED_DRAFTS_KEY, mockGeneratedPosts),
     ),
-  generateDraft: (subreddit: string, postType?: GeneratedPostDraft['postType']) => {
+  generateDraft: async (subreddit: string, postType?: GeneratedPostDraft['postType']) => {
     const base =
       mockGeneratedPosts.find((draft) => draft.postType === postType) ?? mockGeneratedPosts[0]!;
+    const subredditInsight = mockSubreddits.find((item) => item.name === subreddit);
+    const companyProfile = readJson(PROFILE_STORAGE_KEY, mockCompanyProfile);
+    const hosted = await callHostedClaude<Partial<GeneratedPostDraft>>('/api/claude/generate-draft', {
+      companyProfile,
+      subreddit,
+      subredditInsight,
+      postType: postType ?? base.postType,
+    });
     const draft: GeneratedPostDraft = {
       ...base,
+      ...hosted,
       id: `static-${Date.now()}`,
       subreddit,
       postType: postType ?? base.postType,
-      title: `${base.title}`,
+      subredditDescription: subredditInsight?.description ?? base.subredditDescription,
+      audienceFit: subredditInsight?.audienceFit ?? base.audienceFit,
+      leadPotential: subredditInsight?.leadPotential ?? base.leadPotential,
+      promotionTolerance: subredditInsight?.promotionTolerance ?? base.promotionTolerance,
+      title: hosted?.title ?? base.title,
+      body: hosted?.body ?? base.body,
+      whyImportant: hosted?.whyImportant ?? base.whyImportant,
+      whyFitsSubreddit: hosted?.whyFitsSubreddit ?? base.whyFitsSubreddit,
+      customerPainTargeted: hosted?.customerPainTargeted ?? base.customerPainTargeted,
+      recommendedCta: hosted?.recommendedCta ?? base.recommendedCta,
+      spamRisk: hosted?.spamRisk ?? base.spamRisk,
+      redditNativeRewriteSuggestions:
+        hosted?.redditNativeRewriteSuggestions ?? base.redditNativeRewriteSuggestions,
+      warnings: hosted?.warnings ?? base.warnings,
     };
     const current = readJson(GENERATED_DRAFTS_KEY, mockGeneratedPosts);
     writeJson(GENERATED_DRAFTS_KEY, [draft, ...current]);
