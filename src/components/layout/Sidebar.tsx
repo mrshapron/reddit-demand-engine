@@ -32,7 +32,7 @@ export function Sidebar() {
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r border-slate-200 bg-slate-100 md:flex md:flex-col">
       <div className="flex items-center gap-3 border-b border-slate-100 px-5 py-5">
         <img
-          src="/app-icon.png"
+          src={`${import.meta.env.BASE_URL}app-icon.png`}
           alt="Enso AI"
           className="h-10 w-10 shrink-0 object-contain"
         />

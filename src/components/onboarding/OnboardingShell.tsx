@@ -24,7 +24,11 @@ export function OnboardingShell({ steps, currentIndex, children, onSkip }: Props
       <header className="border-b border-slate-200 bg-slate-100/70 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-2.5">
-            <img src="/app-icon.png" alt="Enso AI" className="h-8 w-8 object-contain" />
+            <img
+              src={`${import.meta.env.BASE_URL}app-icon.png`}
+              alt="Enso AI"
+              className="h-8 w-8 object-contain"
+            />
             <div className="leading-tight">
               <div className="text-sm font-semibold text-slate-900">Enso AI</div>
               <div className="text-[10px] uppercase tracking-wider text-slate-500">
